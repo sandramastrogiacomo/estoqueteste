@@ -1,7 +1,6 @@
 package com.example.estoque.service;
 
 import com.example.estoque.domain.Pedido;
-import com.example.estoque.domain.Produto;
 import com.example.estoque.entity.ProdutoEntity;
 import com.example.estoque.exception.ForaDeEstoqueException;
 import com.example.estoque.repository.ProdutoRepository;
@@ -19,7 +18,7 @@ public class ProdutoService {
         this.repository = repository;
     }
 
-    public void cadastrarProduto(Produto produto){
+    public void cadastrarProduto(com.example.estoque.domain.Produto produto){
 
         ProdutoEntity estoque = repository.findByNome(produto.getNome());
         if(estoque != null){
@@ -30,11 +29,11 @@ public class ProdutoService {
         }
     }
 
-    public List<Produto> encontrarTodos(){
+    public List<com.example.estoque.domain.Produto> encontrarTodos(){
         return repository
                 .findAll()
                 .stream()
-                .map(Produto::new)
+                .map(com.example.estoque.domain.Produto::new)
                 .collect(Collectors.toList());
     }
 
@@ -50,7 +49,21 @@ public class ProdutoService {
         });
     }
 
-    public Produto encontrarPorNome(String nome) {
-        return new Produto(repository.findByNome(nome));
+    public com.example.estoque.domain.Produto encontrarPorNome(String nome) {
+        return new com.example.estoque.domain.Produto(repository.findByNome(nome));
     }
+
+    public ProdutoEntity criarProduto(ProdutoEntity produto) {
+        return repository.save(produto);
+    }
+
+    public List<ProdutoEntity> listarProdutos() {
+        return repository.findAll();
+    }
+
+    public ProdutoEntity buscarProdutoPorId(long id) {
+        return repository.findById(id).orElse(null);
+    }
+
+
 }

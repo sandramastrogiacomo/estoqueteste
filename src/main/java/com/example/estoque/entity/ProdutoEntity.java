@@ -1,6 +1,5 @@
 package com.example.estoque.entity;
 
-import com.example.estoque.domain.Produto;
 import jakarta.persistence.*;
 
 @Entity(name = "produto")
@@ -17,7 +16,7 @@ public class ProdutoEntity {
     public ProdutoEntity() {
     }
 
-    public ProdutoEntity(Produto produto) {
+    public ProdutoEntity(com.example.estoque.domain.Produto produto) {
         this.nome = produto.getNome();
         this.descricao = produto.getDescricao();
         this.preco = produto.getPreco();;
@@ -64,4 +63,11 @@ public class ProdutoEntity {
         this.qtd = qtd;
     }
 
+    public void setQuantidade(int i) {
+        this.qtd = i;
+    }
+
+    public int getQuantidade() {
+        return this.qtd;
+    }
 }
