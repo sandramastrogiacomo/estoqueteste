@@ -28,4 +28,15 @@ public class ProdutoController {
     public ProdutoEntity criar(@RequestBody ProdutoEntity produto) {
         return produtoService.criarProduto(produto);
     }
+    @PutMapping("/{id}")
+    public ProdutoEntity atualizar(@PathVariable Long id, @RequestBody ProdutoEntity produtoAtualizado) {
+        produtoAtualizado.setId(id); // garante que o ID na URL seja usado
+        return produtoService.atualizarProduto(produtoAtualizado);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletar(@PathVariable Long id) {
+        produtoService.deletarProduto(id);
+    }
+
 }

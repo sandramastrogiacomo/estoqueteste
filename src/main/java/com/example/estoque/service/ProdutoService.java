@@ -66,4 +66,23 @@ public class ProdutoService {
     }
 
 
+    public ProdutoEntity atualizarProduto(ProdutoEntity produtoAtualizado) {
+        ProdutoEntity existente = repository.findById(produtoAtualizado.getId())
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + produtoAtualizado.getId()));
+
+        existente.setNome(produtoAtualizado.getNome());
+        existente.setDescricao(produtoAtualizado.getDescricao());
+        existente.setPreco(produtoAtualizado.getPreco());
+        existente.setQtd(produtoAtualizado.getQtd());
+
+        return repository.save(existente);
+    }
+
+    public void deletarProduto(Long id) {
+        if (!repository.existsById(id)) {
+            throw new RuntimeException("Produto com ID " + id + " não encontrado.");
+        }
+        repository.deleteById(id);
+    }
+
 }
