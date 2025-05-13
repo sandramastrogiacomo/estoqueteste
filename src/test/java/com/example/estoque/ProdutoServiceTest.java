@@ -81,7 +81,7 @@ public class ProdutoServiceTest {
     }
 
     @Test
-    public void testAtualizarEstoque_ComEstoqueSuficiente() {
+    public void testAtualizarEstoqueComSucesso() {
         ProdutoEntity produto = new ProdutoEntity();
         produto.setId(1L);
         produto.setNome("Borracha");
@@ -89,38 +89,123 @@ public class ProdutoServiceTest {
 
         ItemPedido item = new ItemPedido();
         item.setId(1L);
-        item.setQtd(4);
+        item.setQtd(5);
 
         Pedido pedido = new Pedido();
         pedido.setItens(List.of(item));
 
         when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
-        when(produtoRepository.save(any(ProdutoEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(produtoRepository.save(any(ProdutoEntity.class))).thenReturn(produto);
 
-        produtoService.atualizarEstoque(pedido);
+        assertDoesNotThrow(() -> produtoService.atualizarEstoque(pedido));
 
-        assertEquals(6, produto.getQtd()); // 10 - 4
+        assertEquals(5, produto.getQtd());
         verify(produtoRepository).save(produto);
     }
 
     @Test
-    public void testAtualizarEstoque_ComEstoqueInsuficiente() {
+    public void testAtualizarEstoqueComQuantidadeInsuficiente() {
         ProdutoEntity produto = new ProdutoEntity();
         produto.setId(1L);
-        produto.setNome("Caderno");
-        produto.setQtd(2);
+        produto.setNome("Tesoura");
+        produto.setQtd(3);
 
         ItemPedido item = new ItemPedido();
         item.setId(1L);
-        item.setQtd(5); // Maior do que o estoque
+        item.setQtd(5);
 
         Pedido pedido = new Pedido();
         pedido.setItens(List.of(item));
 
         when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
 
-        assertThrows(ForaDeEstoqueException.class, () -> produtoService.atualizarEstoque(pedido));
+        ForaDeEstoqueException exception = assertThrows(
+                ForaDeEstoqueException.class,
+                () -> produtoService.atualizarEstoque(pedido)
+        );
 
+        assertTrue(exception.getMessage().contains("Produto Tesoura possui apenas: 3 em estoque"));
         verify(produtoRepository, never()).save(any());
     }
+
+    @Test
+    public void testAtualizarProdutoComSucesso() {
+        ProdutoEntity existente = new ProdutoEntity();
+        existente.setId(1L);
+        existente.setNome("Produto Antigo");
+        existente.setDescricao("Desc antiga");
+        existente.setPreco(10.0);
+        existente.setQtd(5);
+
+        ProdutoEntity atualizado = new ProdutoEntity();
+        atualizado.setId(1L);
+        atualizado.setNome("Produto Novo");
+        atualizado.setDescricao("Nova descrição");
+        atualizado.setPreco(15.0);
+        atualizado.setQtd(8);
+
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(produtoRepository.save(any(ProdutoEntity.class))).thenReturn(atualizado);
+
+        ProdutoEntity resultado = produtoService.atualizarProduto(atualizado);
+
+        assertEquals("Produto Novo", resultado.getNome());
+        assertEquals("Nova descrição", resultado.getDescricao());
+        assertEquals(15.0, resultado.getPreco());
+        assertEquals(8, resultado.getQtd());
+    }
+
+    @Test
+    public void testAtualizarProdutoNaoEncontrado() {
+        ProdutoEntity produto = new ProdutoEntity();
+        produto.setId(99L);
+
+        when(produtoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+            produtoService.atualizarProduto(produto);
+        });
+
+        assertTrue(ex.getMessage().contains("Produto não encontrado com ID: 99"));
+    }
+
+    @Test
+    public void testDeletarProdutoComSucesso() {
+        when(produtoRepository.existsById(1L)).thenReturn(true);
+
+        assertDoesNotThrow(() -> produtoService.deletarProduto(1L));
+
+        verify(produtoRepository).deleteById(1L);
+    }
+
+    @Test
+    public void testDeletarProdutoNaoEncontrado() {
+        when(produtoRepository.existsById(2L)).thenReturn(false);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+            produtoService.deletarProduto(2L);
+        });
+
+        assertTrue(ex.getMessage().contains("Produto com ID 2 não encontrado."));
+        verify(produtoRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    public void testEncontrarPorNome() {
+        ProdutoEntity entity = new ProdutoEntity();
+        entity.setNome("Café");
+        entity.setDescricao("Café torrado e moído");
+        entity.setPreco(18.99);
+        entity.setQtd(20);
+
+        when(produtoRepository.findByNome("Café")).thenReturn(entity);
+
+        com.example.estoque.domain.Produto resultado = produtoService.encontrarPorNome("Café");
+
+        assertEquals("Café", resultado.getNome());
+        assertEquals("Café torrado e moído", resultado.getDescricao());
+        assertEquals(18.99, resultado.getPreco());
+        assertEquals(20, resultado.getQtd());
+    }
+
 }
